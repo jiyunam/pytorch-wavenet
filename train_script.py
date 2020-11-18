@@ -14,13 +14,26 @@ if use_cuda:
     dtype = torch.cuda.FloatTensor
     ltype = torch.cuda.LongTensor
 
+# define new dataset
+album_name = '24_preludes_for_solo_piano'
+dir_path = fr'/train_samples/{album_name}/'
+blocks = 3
+layers = 10
+# rf_per_block = 2**layers
+# rf_total = rf_per_block * blocks
+target_length = 16 # num of successive samples used as a target
+# item_length = rf_total +  target_length - 1 # num of samples in each item of dataset
+classes = 256 # mu quantization quantizes to 256 values
+sr = 16000
+dataset_file = f'{album_name}_sr={sr}.npz'
+
 model = WaveNetModel(layers=10,
                      blocks=3,
                      dilation_channels=32,
                      residual_channels=32,
                      skip_channels=1024,
                      end_channels=512,
-                     output_length=16,
+                     output_length=target_length,
                      dtype=dtype,
                      bias=True)
 
@@ -35,11 +48,11 @@ print('model: ', model)
 print('receptive field: ', model.receptive_field)
 print('parameter count: ', model.parameter_count())
 
-data = WavenetDataset(dataset_file='train_samples/bach_chaconne/dataset.npz',
+data = WavenetDataset(dataset_file=dataset_file,
                       item_length=model.receptive_field + model.output_length - 1,
                       target_length=model.output_length,
-                      file_location='train_samples/bach_chaconne',
-                      test_stride=500)
+                      file_location=dir_path,
+                      test_stride=500, sampling_rate=sr)
 print('the dataset has ' + str(len(data)) + ' items')
 
 
@@ -72,7 +85,7 @@ trainer = WavenetTrainer(model=model,
                          lr=0.0001,
                          weight_decay=0.0,
                          snapshot_path='snapshots',
-                         snapshot_name='chaconne_model',
+                         snapshot_name=f'{album_name}_model',
                          snapshot_interval=1000,
                          logger=logger,
                          dtype=dtype,
