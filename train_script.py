@@ -16,7 +16,7 @@ if use_cuda:
 
 # define new dataset
 album_name = '24_preludes_for_solo_piano'
-dir_path = fr'/train_samples/{album_name}/'
+dir_path = fr'../magnatagatune/data/{album_name}/'
 blocks = 3
 layers = 10
 # rf_per_block = 2**layers
